@@ -75,6 +75,12 @@ Veja [IA-COMO-RESPONDER.md](IA-COMO-RESPONDER.md).
   - Colou a resposta do Grok com texto em volta e enviou. A página preencheu 16 campos do cadastro em cerca de 1 s (3,8 s com as listas).
   - O link #j= preencheu a antropometria (26 campos) em 0,7 s.
   - Só com a consulta de reserva (Realtime bloqueado), a evolução preencheu em 2,6 s.
+- **Contra o site publicado (favorito tirado da página ao vivo):**
+  - Pareamento pelo QR, depois colar → cadastro (16 campos) em 0,8 s (3,6 s com as listas).
+  - Link #j= → antropometria (26 campos) em 0,9 s.
+  - Colar → evolução em 0,4 s.
+  - Só consulta de reserva: 2,5 s.
+  - O favorito 1.1 com a ponte nova também preencheu (0,7 s), e o caminho do robô (`carimbar.responder`) em 0,5 s.
 - **Segurança da 1.2 com a chave pública:**
   - Código desconhecido é recusado e código inválido também.
   - Lista e conteúdo acima de 50 KB são recusados.
