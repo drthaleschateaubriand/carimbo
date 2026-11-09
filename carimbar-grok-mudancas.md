@@ -99,3 +99,28 @@ Os roteiros usam a chave e os ids novos quando o código é a Grok v2.1, e os an
 - não abre duas barras;
 - EXTRAIR remove as duas barras;
 - nenhuma ocorrência do nome antigo no código nem na barra.
+
+# Versão Grok 1.1 (09/11/2026): com nuvem
+
+A versão anterior (código interno "Grok v2.1") passa a se chamar **Grok 1.0** e fica congelada em `versoes/1.0/` (tag `grok-1.0`).
+
+## O que mudou
+
+- **Botão ENVIAR P/ IA:** monta um resumo compacto dos campos da página e o envia à IA pela janela-ponte. Para cada campo vão o name/formcontrolname/id, o rótulo, o tipo, o valor atual, as opções (select, ou mat-select quando aberto) e o estado das caixas. Também vão os editores de texto, os tipos detectados e as chaves do CARIMBAR. Nas telas capturadas o resumo ficou entre 0,5 e 3 KB, contra cerca de 500 KB do HTML. Hidden e valores de senha nunca entram.
+- **Recebimento automático:** quando o JSON da IA chega pela ponte, ele é salvo em `carimbarJSON` e o mesmo CARIMBAR da 1.0 roda sozinho. A barra mostra "Recebido da IA" e o resumo. Carimbos seguidos vão para uma fila e são aplicados um de cada vez.
+- **Indicador "IA:"** na barra: conectando, aguardando a IA, carimbando, carimbo aplicado, erro, janela bloqueada.
+- **Rótulo** "Grok 1.1".
+- **Preenchimento, EXTRAIR, COPIAR e LIMPAR:** sem mudanças.
+
+## Segurança da conversa entre janelas
+
+- O favorito não acessa a rede. Só a janela-ponte (`ponte.html`, no GitHub Pages) fala com o Supabase, e ela tem CSP restrita ao projeto.
+- O favorito só aceita mensagens da janela que ele abriu e da origem `https://drthaleschateaubriand.github.io`, e só envia para essa origem.
+- A ponte só aceita mensagens de `window.opener` e responde só para a origem informada pelo navegador no aperto de mão. O aviso "pronta" não leva dados.
+- O endereço da ponte só pode ser trocado (`window.CARIMBAR_PONTE_URL`) para `http://localhost`, para testes.
+
+## Testes 1.1
+
+- jsdom: 75/75 (comparativo), 30/30 (v2) e 24/24 (novos da nuvem), no fonte e no minificado.
+- Chromium real ponta a ponta (cadastro, antropometria e evolução), com a ponte local e com a publicada, em tempo real e só com a consulta de reserva.
+- Os testes `unit-tests-comparativo.cjs` e `unit-tests-grok-v2.cjs` passaram a aceitar o rótulo "Grok 1.x" além de "Grok v2". O teste do rótulo e o teste da mensagem da aba Texto livre dependiam do texto da versão.
