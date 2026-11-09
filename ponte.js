@@ -1,4 +1,4 @@
-/* CARIMBAR Grok 1.2 - janela-ponte entre a pagina (favorito) e a nuvem (Supabase).
+/* CARIMBAR Grok 1.3 - janela-ponte entre a pagina (favorito) e a nuvem (Supabase).
    - Conversa com a pagina que a abriu somente por postMessage, aceitando mensagens apenas de window.opener
      e respondendo apenas para a origem dessa pagina (recebida no aperto de mao).
    - Gera e guarda um codigo secreto de sessao (localStorage); a nuvem so entrega dados a quem tem o codigo.
@@ -113,7 +113,7 @@
     setTimeout(anunciar, 500);
   }
   if(window.opener){ status('Conectando à página…'); anunciar(); }
-  else { status('Abra esta janela pelo botão ENVIAR P/ IA do CARIMBAR', 'erro'); dica('Esta janela precisa ser aberta pelo favorito CARIMBAR Grok 1.1, dentro da página que você quer preencher.'); }
+  else { status('Abra esta janela pelo botão ENVIAR P/ IA do CARIMBAR', 'erro'); dica('Esta janela precisa ser aberta pelo favorito CARIMBAR Grok, dentro da página que você quer preencher.'); }
 
   async function enviarExtracao(m){
     var c = m.conteudo;

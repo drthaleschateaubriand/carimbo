@@ -148,3 +148,26 @@ A 1.1 fica congelada em `versoes/1.1/` (tag `grok-1.1`).
 - Favorito (fonte e minificado): jsdom 75/75, 30/30 e 24/24. O teste da nuvem passou a ler o rótulo esperado do próprio arquivo.
 - Página do celular: jsdom 23/23.
 - Ponta a ponta em Chromium real (contexto hospital + contexto celular emulado): pareamento por QR, colar com texto em volta, link #j= e só consulta de reserva.
+
+# Versão Grok 1.3 (09/11/2026): conferência do paciente
+
+A 1.2 fica congelada em `versoes/1.2/` (tag `grok-1.2`).
+
+## O que mudou
+
+- **Favorito:**
+  - Lê o paciente da tela (cabeçalho/cartão do paciente, janela aberta "Paciente: …", campo nome preenchido, rótulos "Paciente"/"Nome", título da página) e o prontuário, e mostra "Paciente na tela: …" na barra.
+  - Só preenche se o `paciente` do JSON conferir com a tela (sem maiúsculas/acentos; todas as palavras ditadas presentes; o mais específico vence; prontuário precisa bater quando os dois existem).
+  - Outro paciente: "Este JSON é do paciente X, mas a tela aberta é de Y. Nada foi preenchido." Não identificado: "Preencher mesmo assim" / "Cancelar". Cadastro novo: sem conferência, `paciente` vira o nome. Sem `paciente`: como na 1.2, com aviso.
+  - Fila de pacientes na aba (`carimbarFila`), com "Fila: José, Maria" e "limpar fila". INSERIR TEXTO aceita vários JSONs de uma vez.
+  - Pela nuvem: JSON de outro paciente fica na fila, o resumo anterior continua visível e o rótulo da IA diz "outro paciente, nada preenchido".
+  - EXTRAIR grava no HTML copiado os valores digitados (value, texto das caixas, selected, checked); senha fica de fora.
+  - ENVIAR P/ IA inclui `pacienteNaTela`.
+- **`enviar.html`:** vários blocos JSON numa colagem, prévia por paciente, envio de todos em sequência; bloqueia lote com JSON sem paciente; avisa paciente repetido.
+- **Instruções do Grok:** sempre `paciente`, `prontuario` quando ditado, perguntar se o nome não foi dito, um bloco por paciente.
+- **Robôs (`IA-COMO-RESPONDER.md`):** incluir `paciente`; uma chamada `carimbar.responder` por paciente.
+- **Ponte:** só o rótulo. Banco: sem mudanças.
+
+## Testes 1.3
+
+Ver README, seção "Testes 1.3". As suítes antigas passaram sem mudar nenhum teste.

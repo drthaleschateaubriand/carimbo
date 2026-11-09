@@ -1,4 +1,4 @@
-/* CARIMBAR Grok 1.2 - pagina do celular/outro aparelho: pareia com a janela-ponte e envia o JSON do chat. */
+/* CARIMBAR Grok 1.3 - pagina do celular/outro aparelho: pareia com a janela-ponte e envia o(s) JSON(s) do chat (um por paciente). */
 (function(){
   'use strict';
   var SB_URL = 'https://ybcoiphfbkmnzfppkryq.supabase.co';
@@ -45,22 +45,36 @@
     var prev = $('previa'); prev.textContent = ''; atual = null;
     caixa('resultado', '');
     var txt = $('texto').value;
-    if(!txt.trim()){ if(!h.erro) caixa('analise', ''); $('enviar').disabled = true; return; }
-    var r = P.extrairJSON(txt);
+    if(!txt.trim()){ if(!h.erro) caixa('analise', ''); $('enviar').disabled = true; $('enviar').textContent = 'ENVIAR PARA O CARIMBAR'; return; }
+    var r = P.extrairTodos(txt);
     if(r.erro){ caixa('analise', r.erro, 'erro'); $('enviar').disabled = true; return; }
-    var a = P.analisar(r.json);
-    var avisos = [];
-    if(a.desconhecidas.length) avisos.push('Chaves desconhecidas (serão ignoradas pelo CARIMBAR): ' + a.desconhecidas.join(', '));
-    if(a.invalidas.length) avisos.push('Valores que não são texto/número/sim-não: ' + a.invalidas.join(', '));
-    if(!a.total){ caixa('analise', 'O JSON não tem nenhuma chave do CARIMBAR.' + (avisos.length ? '\n' + avisos.join('\n') : ''), 'erro'); $('enviar').disabled = true; return; }
-    caixa('analise', 'JSON válido: ' + a.total + ' campo(s) em ' + a.telas.map(function(t){ return t.nome; }).join(', ') + '.' + (avisos.length ? '\n⚠ ' + avisos.join('\n⚠ ') : ''), avisos.length ? 'aviso' : 'ok');
-    a.telas.forEach(function(t){
-      var h3 = document.createElement('h3'); h3.textContent = t.nome; prev.appendChild(h3);
-      var dl = document.createElement('dl');
-      t.itens.forEach(function(i){ dd(dl, i.rotulo, P.valorLegivel(i.valor)); });
-      prev.appendChild(dl);
+    var lote = P.conferirLote(r.jsons), erros = lote.erros.slice(), avisos = lote.avisos.slice(), total = 0;
+    var analises = r.jsons.map(function(j, n){
+      var a = P.analisar(j), rot = r.jsons.length > 1 ? 'Bloco ' + (n + 1) + ': ' : '';
+      if(a.desconhecidas.length) avisos.push(rot + 'chaves desconhecidas (serão ignoradas pelo CARIMBAR): ' + a.desconhecidas.join(', '));
+      if(a.invalidas.length) avisos.push(rot + 'valores que não são texto/número/sim-não: ' + a.invalidas.join(', '));
+      if(!a.total) erros.push((rot || 'O JSON: ') + 'nenhuma chave do CARIMBAR.');
+      total += a.total;
+      return a;
     });
-    atual = r.json;
+    var pacs = r.jsons.map(function(j){ return P.nomePaciente(j) || 'sem paciente'; });
+    if(erros.length){ caixa('analise', erros.join('\n') + (avisos.length ? '\n⚠ ' + avisos.join('\n⚠ ') : ''), 'erro'); $('enviar').disabled = true; return; }
+    caixa('analise', (r.jsons.length > 1 ? r.jsons.length + ' JSONs válidos (' + pacs.join(', ') + '): ' : 'JSON válido: ') + total + ' campo(s).' + (avisos.length ? '\n⚠ ' + avisos.join('\n⚠ ') : ''), avisos.length ? 'aviso' : 'ok');
+    r.jsons.forEach(function(j, n){
+      var sec = document.createElement('section'); sec.className = 'paciente'; sec.setAttribute('data-paciente', P.nomePaciente(j));
+      var h2 = document.createElement('h2');
+      h2.textContent = P.nomePaciente(j) ? 'Paciente: ' + P.nomePaciente(j) + (j.prontuario != null && j.prontuario !== '' ? ' · prontuário ' + j.prontuario : '') : 'Sem paciente (sem conferência na tela)';
+      sec.appendChild(h2);
+      analises[n].telas.forEach(function(t){
+        var h3 = document.createElement('h3'); h3.textContent = t.nome; sec.appendChild(h3);
+        var dl = document.createElement('dl');
+        t.itens.forEach(function(i){ dd(dl, i.rotulo, P.valorLegivel(i.valor)); });
+        sec.appendChild(dl);
+      });
+      prev.appendChild(sec);
+    });
+    atual = r.jsons;
+    $('enviar').textContent = r.jsons.length > 1 ? 'ENVIAR OS ' + r.jsons.length + ' PARA O CARIMBAR' : 'ENVIAR PARA O CARIMBAR';
     $('enviar').disabled = !codigo();
     if(!codigo()) caixa('resultado', 'Pareie este aparelho antes de enviar.', 'aviso');
   }
@@ -71,23 +85,34 @@
     try{ $('texto').value = await navigator.clipboard.readText(); atualizar(); }
     catch(e){ caixa('analise', 'Sem permissão para colar automaticamente. Toque e segure na caixa acima e escolha Colar.', 'aviso'); $('texto').focus(); }
   };
+  async function enviarUm(c, json){
+    var resp = await fetch(SB_URL + '/rest/v1/rpc/carimbar_responder_app', {
+      method: 'POST',
+      headers: {'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json'},
+      body: JSON.stringify({p_codigo: c, p_conteudo: json})
+    });
+    var corpo = await resp.json().catch(function(){ return null; });
+    if(!resp.ok) throw new Error(corpo && corpo.message ? corpo.message : 'erro ' + resp.status);
+    return corpo;
+  }
+  /* envia um por vez, na ordem; para no primeiro erro e diz o que ja foi */
   $('enviar').onclick = async function(){
-    var c = codigo();
-    if(!atual || !c) return;
-    var b = $('enviar'); b.disabled = true; b.textContent = 'Enviando…';
+    var c = codigo(), lista = atual;
+    if(!lista || !lista.length || !c) return;
+    var b = $('enviar'), rotulo = b.textContent, feitos = [];
+    b.disabled = true; b.textContent = 'Enviando…';
     try{
-      var resp = await fetch(SB_URL + '/rest/v1/rpc/carimbar_responder_app', {
-        method: 'POST',
-        headers: {'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json'},
-        body: JSON.stringify({p_codigo: c, p_conteudo: atual})
-      });
-      var corpo = await resp.json().catch(function(){ return null; });
-      if(!resp.ok) throw new Error(corpo && corpo.message ? corpo.message : 'erro ' + resp.status);
-      caixa('resultado', '✔ Enviado às ' + new Date().toLocaleTimeString('pt-BR') + ' (envio #' + corpo + '). A página no computador se preenche em segundos; confira lá antes de salvar.', 'ok');
+      for(var i = 0; i < lista.length; i++){
+        var nome = P.nomePaciente(lista[i]) || 'sem paciente';
+        if(lista.length > 1) b.textContent = 'Enviando ' + (i + 1) + ' de ' + lista.length + '…';
+        try{ var n = await enviarUm(c, lista[i]); feitos.push(lista.length > 1 ? nome + ' (envio #' + n + ')' : '(envio #' + n + ')'); }
+        catch(e){ throw new Error(lista.length > 1 ? nome + ': ' + e.message : e.message); }
+      }
+      caixa('resultado', '✔ Enviado às ' + new Date().toLocaleTimeString('pt-BR') + (lista.length > 1 ? ': ' : ' ') + feitos.join(', ') + '. ' + (lista.length > 1 ? 'No computador, cada página só recebe o JSON do seu paciente; abra a tela de cada um e confira antes de salvar.' : 'A página no computador se preenche em segundos; confira lá antes de salvar.'), 'ok');
     }catch(e){
-      caixa('resultado', '✖ Não foi enviado: ' + e.message + '. Verifique a internet e o pareamento.', 'erro');
+      caixa('resultado', '✖ Não foi enviado: ' + e.message + '. ' + (feitos.length ? 'Já tinham ido: ' + feitos.join(', ') + '. ' : '') + 'Verifique a internet e o pareamento.', 'erro');
     }finally{
-      b.textContent = 'ENVIAR PARA O CARIMBAR'; b.disabled = !atual || !codigo();
+      b.textContent = rotulo; b.disabled = !atual || !codigo();
     }
   };
   atualizar();
