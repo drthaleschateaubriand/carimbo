@@ -40,8 +40,8 @@ kbd{font-family:inherit;font-size:13px;background:#f4f4f4;border:1px solid #d6d6
 <body>
 <div class="wrap">
 <h1>Instalar CARIMBAR Grok</h1>
-<div class="versao">Versão Grok v2 · 09/11/2026 · testada no CliNiv e em testes automatizados</div>
-<p class="sub">Preenche os formulários do CliNiv a partir do JSON colado. Funciona como um favorito: não instala nada e não carrega nada de fora.</p>
+<div class="versao">Versão Grok v2 · 09/11/2026 · testada em sistema real e em testes automatizados</div>
+<p class="sub">Preenche formulários de qualquer sistema a partir do JSON colado e extrai o conteúdo de qualquer página. Funciona como um favorito: não instala nada e não carrega nada de fora.</p>
 
 <div class="tabs" role="tablist">
 <button class="tab" role="tab" id="tab-chrome" aria-controls="painel-chrome" aria-selected="true">Chrome / Edge / CentBrowser</button>
@@ -63,8 +63,8 @@ kbd{font-family:inherit;font-size:13px;background:#f4f4f4;border:1px solid #d6d6
 </div></div>
 <hr>
 <div class="passo"><div class="num">3</div><div>
-<h2>Usar no CliNiv</h2>
-<p>Abra o formulário (cadastro, prescrição, antropometria, exames ou evolução), clique no favorito, cole o JSON quando pedido e clique <b>CARIMBAR</b>.</p>
+<h2>Usar</h2>
+<p>Abra o formulário no sistema que você usa (cadastro, prescrição, antropometria, exames ou evolução) ou qualquer página de onde queira extrair, clique no favorito, cole o JSON quando pedido e clique <b>CARIMBAR</b>. Para extrair o conteúdo da página, toque em <b>AVANCADO</b> e depois em <b>EXTRAIR</b>.</p>
 <p>Na prescrição, ele abre sozinho a aba Texto livre. Se não abrir, abra a aba e clique CARIMBAR de novo. A barra mostra o que foi preenchido e o que faltou.</p>
 </div></div>
 </section>

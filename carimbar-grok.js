@@ -1,8 +1,21 @@
 /* CARIMBAR - versao Grok
-   Versao corrigida derivada de carimbar.js (original preservado sem alteracoes).
-   Mesmas chaves de armazenamento (clinivJSON, __thales_extractor__) e mesmo visual. */
+   Favorito (bookmarklet) que preenche formularios de qualquer sistema web a partir de um JSON colado
+   e extrai o conteudo de qualquer pagina. Derivado de carimbar.js (original preservado sem alteracoes).
+   Armazenamento: sessionStorage 'carimbarJSON' (texto colado) e localStorage '__thales_extractor__' (paginas extraidas). */
 (function(){
-  if(document.getElementById('clinivBar')) return;
+  var BAR_ID = 'carimbarBar';
+  var BAR_ANTIGA = ['clin','ivBar'].join('');   /* id da barra antiga / versao original */
+  var CHAVE = 'carimbarJSON';
+  var CHAVE_ANTIGA = ['clin','ivJSON'].join(''); /* chave antiga */
+  /* nao abre duas barras (nem junto com a versao original) */
+  if(document.getElementById(BAR_ID) || document.getElementById(BAR_ANTIGA)) return;
+  /* migra o texto salvo na chave antiga para a nova, sem perder nada */
+  try{
+    if(!sessionStorage.getItem(CHAVE) && sessionStorage.getItem(CHAVE_ANTIGA) !== null){
+      sessionStorage.setItem(CHAVE, sessionStorage.getItem(CHAVE_ANTIGA));
+      sessionStorage.removeItem(CHAVE_ANTIGA);
+    }
+  }catch(e){}
 
   var VERSAO = 'Grok v2';
   var EXTRACT_NS = '__thales_extractor__';
@@ -10,7 +23,7 @@
   function setExtracted(d){ localStorage.setItem(EXTRACT_NS, JSON.stringify(d)); }
 
   var bar = document.createElement('div');
-  bar.id = 'clinivBar';
+  bar.id = BAR_ID;
   bar.setAttribute('data-versao', 'grok');
   /* touch-action:none saiu da barra inteira (impedia rolar a barra em tela pequena); fica so na linha de arraste */
   bar.style.cssText = 'position:fixed;bottom:10px;right:10px;z-index:999999;display:flex;flex-direction:column;gap:6px;padding:8px 12px;background:#1a1a2e;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.3);font-family:Arial,sans-serif;cursor:move;max-width:420px;max-height:70vh;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;';
@@ -24,18 +37,18 @@
   bar.appendChild(advRow);
 
   var summaryRow = document.createElement('div');
-  summaryRow.id = 'clinivResumo';
+  summaryRow.id = 'carimbarResumo';
   summaryRow.style.cssText = 'display:none;color:#ddd;font-size:11px;line-height:1.4;padding-top:6px;border-top:1px solid #33334d;white-space:pre-wrap;word-break:break-word;cursor:auto;';
   bar.appendChild(summaryRow);
 
   var status = document.createElement('span');
-  status.id = 'clinivStatus';
+  status.id = 'carimbarStatus';
   status.style.cssText = 'color:#aaa;font-size:11px;align-self:center;margin-right:4px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
   topRow.appendChild(status);
 
   /* usa a referencia direta: funciona antes da barra ser anexada ao documento */
   function updateStatus(){
-    var jsonPart = sessionStorage.getItem('clinivJSON') ? 'Texto salvo' : 'Sem dados';
+    var jsonPart = sessionStorage.getItem(CHAVE) ? 'Texto salvo' : 'Sem dados';
     var n = getExtracted().length;
     var extractPart = n > 0 ? (n + ' pag. extraidas') : 'Nada extraido';
     status.textContent = jsonPart + ' | ' + extractPart;
@@ -65,7 +78,7 @@
   topRow.appendChild(btnAdv);
 
   var verLabel = document.createElement('span');
-  verLabel.id = 'clinivVersao';
+  verLabel.id = 'carimbarVersao';
   verLabel.textContent = VERSAO;
   verLabel.title = 'CARIMBAR - versao Grok v2';
   verLabel.style.cssText = 'color:#555;font-size:9px;align-self:center;letter-spacing:0.5px;';
@@ -336,16 +349,16 @@
   async function carimbar(){
     var cands = detectTipos();
     if(!cands.length){ alert('Nenhum formulario reconhecido.'); return; }
-    var saved = sessionStorage.getItem('clinivJSON');
+    var saved = sessionStorage.getItem(CHAVE);
     if(!saved){
       saved = await askText(cands.join('/').toUpperCase() + ' detectado. Cole o texto/JSON:');
       if(!saved) return;
-      sessionStorage.setItem('clinivJSON', saved);
+      sessionStorage.setItem(CHAVE, saved);
       updateStatus();
     }
     var d;
-    try{ d = JSON.parse(saved); }catch(e){ alert('JSON invalido'); sessionStorage.removeItem('clinivJSON'); updateStatus(); return; }
-    if(!d || typeof d !== 'object' || Array.isArray(d)){ alert('JSON invalido'); sessionStorage.removeItem('clinivJSON'); updateStatus(); return; }
+    try{ d = JSON.parse(saved); }catch(e){ alert('JSON invalido'); sessionStorage.removeItem(CHAVE); updateStatus(); return; }
+    if(!d || typeof d !== 'object' || Array.isArray(d)){ alert('JSON invalido'); sessionStorage.removeItem(CHAVE); updateStatus(); return; }
     var tipo = chooseTipo(cands, d);
 
     var S = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
@@ -598,7 +611,7 @@
   btnL.onclick = async function(){
     var r = await askText('Cole o texto/JSON do novo paciente:');
     if(r){
-      sessionStorage.setItem('clinivJSON', r);
+      sessionStorage.setItem(CHAVE, r);
       updateStatus();
       btnL.style.background = '#1a6b3c';
       btnL.textContent = 'SALVO!';
@@ -611,7 +624,7 @@
   /* EXTRAIR: remove cdk-describedby, scripts e a propria barra num clone do body (sem regex) */
   btnE.onclick = function(){
     var clone = document.body.cloneNode(true);
-    [].slice.call(clone.querySelectorAll('.cdk-describedby-message-container, script, #clinivBar')).forEach(function(n){ n.remove(); });
+    [].slice.call(clone.querySelectorAll('.cdk-describedby-message-container, script, #' + BAR_ID + ', #' + BAR_ANTIGA)).forEach(function(n){ n.remove(); });
     var html = clone.innerHTML;
     var d = getExtracted();
     d.push({url: location.href, time: new Date().toLocaleString(), html: html});
