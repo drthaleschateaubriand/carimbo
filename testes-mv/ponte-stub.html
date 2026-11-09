@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset="utf-8"><title>ponte stub</title></head><body><pre id="log"></pre>
+<script>
+window.recebidas=[]; var origem=null;
+window.addEventListener('message',function(ev){ if(ev.source!==window.opener) return; var m=ev.data; window.recebidas.push(JSON.parse(JSON.stringify(m)));
+ if(m.carimbar==='ola'){ origem=ev.origin; window.opener.postMessage({carimbar:'conectado'},origem); }
+ document.getElementById('log').textContent+=m.carimbar+'\n'; });
+window.mandar=function(json,id){ window.opener.postMessage({carimbar:'carimbo',id:id||1,json:json},origem); };
+var n=0;(function an(){ if(origem||n++>40) return; window.opener.postMessage({carimbar:'pronta'},'*'); setTimeout(an,200); })();
+</script></body></html>

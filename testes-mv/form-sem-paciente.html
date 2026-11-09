@@ -1,0 +1,16 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Transição de Cuidados</title></head><body>
+<div class="x-panel">
+<table><tr><td>PA (mmHg)</td><td><input id="ext-comp-1011" name="cdPa" type="text"></td></tr>
+<tr><td>Frequência cardíaca</td><td><input id="ext-comp-1012" name="nrFc" type="text"></td></tr>
+<tr><td>Risco de queda</td><td><select id="ext-comp-1013" name="tpRisco"><option value=""></option><option value="B">Baixo</option><option value="M">Moderado</option><option value="A">Alto</option></select></td></tr>
+<tr><td>Alergia</td><td><input type="checkbox" id="ext-comp-1014" name="snAlergia"></td></tr>
+</table>
+<div class="x-form-item"><label class="x-form-item-label" for="ext-comp-1020">Transição de cuidados:</label><textarea id="ext-comp-1020" name="dsTransicao" rows="6" cols="60"></textarea></div>
+</div>
+<script>
+/* imita ExtJS/GWT: o "modelo" so muda quando chegam keyup/blur/change (nao basta trocar .value) */
+window.modelo = {};
+document.querySelectorAll('input,textarea,select').forEach(function(el){
+  ['keyup','blur','change'].forEach(function(t){ el.addEventListener(t, function(){ window.modelo[el.name] = el.type==='checkbox' ? el.checked : el.value; window.eventos = (window.eventos||[]).concat([el.name+':'+t]); }); });
+});
+</script></body></html>

@@ -27,6 +27,7 @@
   CONHECIDAS.texto = 'geral';
   CONHECIDAS.paciente = 'paciente';
   CONHECIDAS.prontuario = 'paciente';
+  CONHECIDAS.campos = 'campos'; /* 1.4: {"campos": {"nome ou rotulo do campo": valor}} para telas de outros sistemas (ex.: MV) */
 
   function ehObjeto(v){ return v !== null && typeof v === 'object' && !Array.isArray(v); }
   function tentar(s){ try{ var v = JSON.parse(s); return ehObjeto(v) ? v : null; }catch(e){ return null; } }
@@ -163,8 +164,14 @@
       return {id: t.id, nome: t.nome, itens: t.chaves.filter(function(c){ return Object.prototype.hasOwnProperty.call(json, c[0]) && json[c[0]] !== '' && json[c[0]] !== null; })
         .map(function(c){ return {chave: c[0], rotulo: c[1], valor: json[c[0]]}; })};
     }).filter(function(t){ return t.itens.length; });
+    var cp = ehObjeto(json.campos) ? json.campos : null;
+    if(cp){
+      var itens = Object.keys(cp).filter(function(k){ var v = cp[k]; return v !== '' && v !== null && typeof v !== 'object'; }).map(function(k){ return {chave: k, rotulo: k, valor: cp[k]}; });
+      if(itens.length) telas.push({id: 'campos', nome: 'Campos do formulário (por nome ou rótulo)', itens: itens});
+    }
     var desconhecidas = Object.keys(json).filter(function(k){ return !CONHECIDAS[k]; });
-    var invalidas = Object.keys(json).filter(function(k){ var v = json[k]; return v !== null && typeof v === 'object'; });
+    var invalidas = Object.keys(json).filter(function(k){ var v = json[k]; return v !== null && typeof v === 'object' && !(k === 'campos' && ehObjeto(v)); });
+    if(cp) Object.keys(cp).forEach(function(k){ var v = cp[k]; if(v !== null && typeof v === 'object') invalidas.push('campos.' + k); });
     var total = telas.reduce(function(a, t){ return a + t.itens.length; }, 0);
     return {telas: telas, desconhecidas: desconhecidas, invalidas: invalidas, total: total};
   }

@@ -171,3 +171,20 @@ A 1.2 fica congelada em `versoes/1.2/` (tag `grok-1.2`).
 ## Testes 1.3
 
 Ver README, seção "Testes 1.3". As suítes antigas passaram sem mudar nenhum teste.
+
+## Grok 1.4 (09/11/2026): telas em quadros (MV PEP) e modo genérico
+
+Motivo: no MV PEP ("PEP » Transição de Cuidados") a 1.3 rodou mas não achou nada (campos [], editores [], pacienteNaTela null), porque a tela é montada dentro de quadros (iframes). E o navegador próprio do SoulMV não tem barra de favoritos.
+
+| # | O que era (1.3) | O que mudou (1.4) |
+|---|---|---|
+| 1 | Buscava campos, editores e o paciente só no documento principal. | Percorre recursivamente todos os `iframe`/`frame` acessíveis (mesma origem), inclusive `frameset` e quadros aninhados, e o shadow DOM aberto. Vale para preencher, extrair, achar o paciente, ENVIAR P/ IA e CAMPOS. |
+| 2 | Quadro de outro site passava despercebido. | O navegador não deixa ler quadros de outro site. A barra mostra "Quadros lidos: N \| de outro site, ignorados: M", o resumo enviado à IA leva `quadros`, e o EXTRAIR anota no HTML. Sem nenhum campo legível, o alerta diz quantos quadros de outro site existem. |
+| 3 | Página com `frameset` não mostraria a barra. | A barra vai para o maior quadro acessível. |
+| 4 | Página sem tipo conhecido: "Nenhum formulario reconhecido." | Modo **genérico**: preenche pela chave do JSON comparada com `name`, `id`, `formcontrolname`, `aria-label`, `placeholder` e rótulo do campo (label, item ExtJS, célula anterior da tabela). Aceita `{"campos": {"rótulo": "valor"}}`. Textos (`evolucao`, `texto`…) vão para a caixa clicada por último ou para a única caixa da tela; com várias e sem clique, não escreve e pede o clique. Mudança intencional: o teste 48 do roteiro comparativo (que esperava o alerta numa página com `<input name="username">`) passa a ver a caixa pedindo o JSON; o roteiro `unit-tests-comparativo-1.4.cjs` é o original com só essa expectativa trocada. |
+| 5 | Eventos: input, change, blur. | focus, focusin, keydown, input, keyup, change, blur (borbulha, como antes) e focusout, criados com a janela do próprio quadro, para ExtJS/GWT/Angular perceberem o valor. Setter nativo do quadro (não da página principal). |
+| 6 | Só CKEditor 5. | Também `contenteditable`, corpos de editor em iframe (`designMode`/`contenteditable`) e, se existirem, CKEditor 4 e TinyMCE pela API deles. Evolução numa página com `name="description"` sem CKEditor vai para a caixa de texto comum. |
+| 7 | Sem destaque. | Campos preenchidos ficam com contorno verde por 8 s. Novo botão **AVANCADO > CAMPOS**: contorno azul nos campos visíveis e lista das chaves por quadro. O destaque não entra no EXTRAIR. |
+| 8 | ENVIAR P/ IA. | Cada campo leva `quadro` (quando está em quadro) e, no tipo genérico, `chave`; `chavesCarimbar.generico` lista as chaves; editores ricos entram em `editores` com `rico: true`. |
+| 9 | `enviar.html`. | Aceita `"campos"` (seção "Campos do formulário"). Cada texto da prévia tem **Copiar**, e cada paciente tem **Copiar tudo deste paciente**, para colar com Ctrl+V onde o favorito não roda (navegador do SoulMV). Copiar não exige pareamento. |
+| 10 | Página de instalação: Chrome e Safari. | Nova aba **SoulMV / navegador do MV**: copiar o código (com e sem `javascript:`), caixa com o código para Ctrl+A/Ctrl+C, abrir o MV no Chrome/Edge, e o caminho sem favorito pela `enviar.html`. |

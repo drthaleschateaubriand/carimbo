@@ -1,0 +1,8 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<span>Paciente: JOSÉ TESTE FICTÍCIO</span>
+<div><label>Evolução médica</label></div>
+<iframe id="editorEvolucao" title="Evolução médica" src="editor-iframe.html" style="width:90%;height:220px"></iframe>
+<mv-campo id="sombra"></mv-campo>
+<script>
+customElements.define('mv-campo', class extends HTMLElement{ constructor(){ super(); const r=this.attachShadow({mode:'open'}); r.innerHTML='<label for="cid">CID principal</label><input id="cid" name="cdCid">'; } });
+</script></body></html>

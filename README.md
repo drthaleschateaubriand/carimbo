@@ -1,10 +1,20 @@
-# CARIMBAR Grok 1.3 (confere o paciente da tela)
+# CARIMBAR Grok 1.4 (lê telas em quadros, como o MV PEP)
 
-Favorito (bookmarklet) que **preenche formulários de qualquer sistema web** e **extrai o conteúdo de qualquer página**. Com a nuvem, a página se preenche sozinha de dois jeitos. Pelo robô: o botão **ENVIAR P/ IA** manda os campos para a IA, que responde direto. Pelo chat comum do Grok: o JSON é enviado pelo celular pareado (1.2). Na 1.3 o CARIMBAR só preenche se o JSON for do paciente que está na tela.
+Favorito (bookmarklet) que **preenche formulários de qualquer sistema web** e **extrai o conteúdo de qualquer página**. Com a nuvem, a página se preenche sozinha de dois jeitos. Pelo robô: o botão **ENVIAR P/ IA** manda os campos para a IA, que responde direto. Pelo chat comum do Grok: o JSON é enviado pelo celular pareado (1.2). Na 1.3 o CARIMBAR passou a só preencher se o JSON for do paciente que está na tela. Na 1.4 ele lê e preenche telas montadas em quadros (iframes/frames), como o MV PEP, e preenche formulários de qualquer sistema pelo nome ou rótulo do campo.
 
 - Página de instalação: https://drthaleschateaubriand.github.io/carimbo/
 - Enviar do celular (chat do Grok): https://drthaleschateaubriand.github.io/carimbo/enviar.html
-- Versões anteriores: [Grok 1.2](https://drthaleschateaubriand.github.io/carimbo/versoes/1.2/) (sem conferência do paciente), [Grok 1.1](https://drthaleschateaubriand.github.io/carimbo/versoes/1.1/) (nuvem, sem celular) e [Grok 1.0](https://drthaleschateaubriand.github.io/carimbo/versoes/1.0/) (sem nuvem)
+- Versões anteriores: [Grok 1.3](https://drthaleschateaubriand.github.io/carimbo/versoes/1.3/) (sem leitura de quadros), [Grok 1.2](https://drthaleschateaubriand.github.io/carimbo/versoes/1.2/) (sem conferência do paciente), [Grok 1.1](https://drthaleschateaubriand.github.io/carimbo/versoes/1.1/) (nuvem, sem celular) e [Grok 1.0](https://drthaleschateaubriand.github.io/carimbo/versoes/1.0/) (sem nuvem)
+
+## Novo na 1.4: quadros (MV PEP), modo genérico e navegador do SoulMV
+
+- **Quadros:** procura campos, editores e o paciente em todos os `iframe`/`frame` da mesma origem, inclusive `frameset`, quadros aninhados e shadow DOM aberto. Quadros de outro site não podem ser lidos pelo navegador: a barra mostra "Quadros lidos: N | de outro site, ignorados: M".
+- **Modo genérico:** em telas sem tipo conhecido, a chave do JSON é comparada com `name`, `id`, `aria-label`, `placeholder` e rótulo do campo. Também aceita `{"campos": {"PA": "120x80"}}`. `evolucao`/`texto` vai para a caixa de texto clicada por último ou para a única da tela.
+- **Eventos:** focus, keydown, input, keyup, change, blur e focusout, com a janela do próprio quadro (ExtJS, GWT, Angular).
+- **Editores:** `contenteditable`, editor em iframe (`designMode`), CKEditor 4 e TinyMCE, além do CKEditor 5.
+- **Destaque:** contorno verde nos campos preenchidos; **AVANCADO > CAMPOS** mostra em azul o que o CARIMBAR enxerga, quadro por quadro.
+- **SoulMV:** a página de instalação ganhou a aba "SoulMV / navegador do MV" (copiar o código para um favorito ou para a barra de endereço, abrir o MV no Chrome/Edge, ou copiar e colar cada texto pela `enviar.html`, que agora tem botão **Copiar** em cada texto).
+- Detalhes: [carimbar-grok-mudancas.md](carimbar-grok-mudancas.md).
 
 ## Novo na 1.3: conferência do paciente
 
@@ -66,10 +76,13 @@ Veja [IA-COMO-RESPONDER.md](IA-COMO-RESPONDER.md).
 
 | Arquivo | Conteúdo |
 |---|---|
-| `carimbar-grok-1.3.js` | Código-fonte da 1.3 (conferência do paciente, fila, EXTRAIR com valores digitados) |
-| `carimbar-grok-1.3.min.js`, `carimbar-grok-1.3-favorito.txt` | Minificado e favorito pronto (`javascript:...`) |
-| `index.html`, `carimbar-grok-1.3-instalar.html` | Página de instalação da 1.3 |
-| `build-grok-1.3.cjs` | Gera min, favorito e páginas da 1.3 (`node build-grok-1.3.cjs`) |
+| `carimbar-grok-1.4.js` | Código-fonte da 1.4 (quadros, modo genérico, destaque, CAMPOS) |
+| `carimbar-grok-1.4.min.js`, `carimbar-grok-1.4-favorito.txt` | Minificado e favorito pronto (`javascript:...`) |
+| `index.html`, `carimbar-grok-1.4-instalar.html` | Página de instalação da 1.4 (com a aba SoulMV) |
+| `build-grok-1.4.cjs` | Gera min, favorito e páginas da 1.4 (`node build-grok-1.4.cjs`) |
+| `testes-mv/`, `e2e-grok-1.4.mjs`, `e2e-grok-1.4-paginas.mjs` | Páginas locais que imitam o MV PEP (iframe, aninhado, frameset, outro site, editor rico, shadow DOM; dados fictícios) e os testes em Chrome |
+| `unit-tests-comparativo-1.4.cjs` | Roteiro comparativo com a expectativa do teste 48 trocada para o modo genérico |
+| `carimbar-grok-1.3*`, `build-grok-1.3.cjs` | Arquivos da 1.3 |
 | `unit-tests-grok-1.3.cjs` | Testes da conferência do paciente, da fila e do EXTRAIR |
 | `carimbar-grok-1.2*`, `build-grok-1.2.cjs`, `carimbar-grok-1.1*`, `build-grok-1.1.cjs` | Arquivos da 1.2 e da 1.1 |
 | `ponte.html`, `ponte.js`, `vendor/supabase-js-2.119.0.js`, `vendor/qrcode-generator-1.4.4.js` | Janela-ponte com pareamento por QR (bibliotecas fixadas e servidas pelo próprio site) |
@@ -78,8 +91,15 @@ Veja [IA-COMO-RESPONDER.md](IA-COMO-RESPONDER.md).
 | `unit-tests-enviar.cjs` | Testes da página do celular |
 | `supabase/carimbar.sql` | Tabela, funções, aviso em tempo real e limpeza de 24 h |
 | `unit-tests-comparativo.cjs`, `unit-tests-grok-v2.cjs`, `unit-tests-grok-1.1.cjs` | Testes em jsdom |
-| `versoes/1.0/`, `versoes/1.1/`, `versoes/1.2/` | Versões congeladas (páginas de instalação funcionando) |
+| `versoes/1.0/` a `versoes/1.3/` | Versões congeladas (páginas de instalação funcionando) |
 | `carimbar-grok.js`, `carimbar-grok.min.js`, `carimbar-grok-favorito.txt`, `carimbar-grok-instalar.html`, `build-grok.cjs` | Arquivos da 1.0 mantidos na raiz |
+
+## Testes 1.4 (09/11/2026)
+
+- **jsdom, favorito 1.4 (fonte e minificado, mesmos números):** roteiro comparativo 75/75 (com o teste 48 trocado para o modo genérico, ver mudanças), roteiro v2 30/30, nuvem 24/24, testes da 1.3 21/21. Página do celular 30/30.
+- **Chrome headless com páginas que imitam o MV PEP (`testes-mv/`, favorito minificado), 12/12:** iframe da mesma origem (preenche por rótulo, eventos chegam ao "modelo" ExtJS/GWT, paciente conferido, destaque); chave pelo `name` e EXTRAIR com o quadro; ENVIAR P/ IA com ponte local de teste (campos com `quadro`, `chave`, `pacienteNaTela`, `quadros`) e carimbo da "nuvem" aplicado no quadro; iframe aninhado com o paciente em outro quadro (José na tela da Maria: nada preenchido, aviso exato); fila José/Maria em quadros; frameset (barra no quadro principal, paciente no cabeçalho); quadro de outro site ignorado e contado; só quadro de outro site (alerta); editor rico em iframe e campo em shadow DOM; duas caixas de texto (pede clique; depois do clique vai para a certa); antropometria da 1.3 dentro de iframe; botão CAMPOS.
+- **Páginas:** aba SoulMV copia o código com e sem `javascript:` (igual ao favorito); `enviar.html` aceita `campos` e copia cada texto e o paciente inteiro. 2/2.
+- **Não testado:** o navegador do SoulMV e o MV PEP real (não há acesso daqui); colar o código na barra de endereço ou no editor de favoritos de um navegador real; CKEditor 4/TinyMCE reais.
 
 ## Testes 1.3 (09/11/2026)
 
@@ -122,9 +142,12 @@ Veja [IA-COMO-RESPONDER.md](IA-COMO-RESPONDER.md).
   - Não há acesso direto às tabelas.
 
 ```
-CARIMBAR_FILE=carimbar-grok-1.3.js node unit-tests-grok-1.1.cjs
-CARIMBAR_FILE=carimbar-grok-1.3.js node unit-tests-grok-1.3.cjs
+CARIMBAR_FILE=carimbar-grok-1.4.js node unit-tests-grok-1.1.cjs
+CARIMBAR_FILE=carimbar-grok-1.4.js node unit-tests-grok-1.3.cjs
 node unit-tests-enviar.cjs
+# páginas que imitam o MV (duas origens) e o teste em Chrome
+(cd testes-mv && python3 -m http.server 8801 --bind 127.0.0.1 &) ; (cd testes-mv && python3 -m http.server 8802 --bind 127.0.0.1 &)
+node e2e-grok-1.4.mjs carimbar-grok-1.4-favorito.txt
 ```
 
 ## Observações

@@ -1,4 +1,5 @@
-/* CARIMBAR Grok 1.3 - pagina do celular/outro aparelho: pareia com a janela-ponte e envia o(s) JSON(s) do chat (um por paciente). */
+/* CARIMBAR Grok 1.4 - pagina do celular/outro aparelho: pareia com a janela-ponte e envia o(s) JSON(s) do chat (um por paciente).
+   1.4: cada texto da previa tem um botao Copiar, para colar com Ctrl+V em sistemas onde o favorito nao roda (ex.: navegador do SoulMV). */
 (function(){
   'use strict';
   var SB_URL = 'https://ybcoiphfbkmnzfppkryq.supabase.co';
@@ -40,7 +41,28 @@
   /* link aberto com a pagina ja aberta (so muda o #): le de novo */
   window.addEventListener('hashchange', function(){ if(location.hash){ lerFragmento(); atualizar(); } });
 
-  function dd(dl, rot, val){ var a = document.createElement('dt'), b = document.createElement('dd'); a.textContent = rot; b.textContent = val; dl.appendChild(a); dl.appendChild(b); }
+  /* 1.4: copiar sem depender da permissao de area de transferencia (execCommand como reserva) */
+  function copiar(texto, botao, rotulo){
+    var fim = function(ok){ botao.textContent = ok ? 'Copiado!' : 'Selecione e copie'; botao.setAttribute('data-copiado', ok ? '1' : '0'); setTimeout(function(){ botao.textContent = rotulo; }, 1800); };
+    var reserva = function(){
+      var ta = document.createElement('textarea'); ta.value = texto; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.left = '-9999px';
+      document.body.appendChild(ta); ta.select(); try{ ta.setSelectionRange(0, texto.length); }catch(e){}
+      var ok = false; try{ ok = document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta); fim(ok);
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(function(){ fim(true); }, reserva);
+    else reserva();
+  }
+  function botaoCopiar(texto, rotulo){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'copiar'; b.textContent = rotulo || 'Copiar';
+    b.onclick = function(){ copiar(texto, b, rotulo || 'Copiar'); };
+    return b;
+  }
+  function dd(dl, rot, val){
+    var a = document.createElement('dt'), b = document.createElement('dd'), c = document.createElement('span');
+    a.textContent = rot; b.textContent = val; c.className = 'cp'; c.appendChild(botaoCopiar(val));
+    dl.appendChild(a); dl.appendChild(b); dl.appendChild(c);
+  }
   function atualizar(){
     var prev = $('previa'); prev.textContent = ''; atual = null;
     caixa('resultado', '');
@@ -65,6 +87,8 @@
       var h2 = document.createElement('h2');
       h2.textContent = P.nomePaciente(j) ? 'Paciente: ' + P.nomePaciente(j) + (j.prontuario != null && j.prontuario !== '' ? ' · prontuário ' + j.prontuario : '') : 'Sem paciente (sem conferência na tela)';
       sec.appendChild(h2);
+      var tudo = analises[n].telas.map(function(t){ return t.itens.map(function(i){ return i.rotulo + ': ' + P.valorLegivel(i.valor); }).join('\n'); }).join('\n');
+      var bt = botaoCopiar(tudo, 'Copiar tudo deste paciente'); bt.classList.add('tudo'); sec.appendChild(bt);
       analises[n].telas.forEach(function(t){
         var h3 = document.createElement('h3'); h3.textContent = t.nome; sec.appendChild(h3);
         var dl = document.createElement('dl');
