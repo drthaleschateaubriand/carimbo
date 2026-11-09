@@ -92,6 +92,12 @@ Veja [IA-COMO-RESPONDER.md](IA-COMO-RESPONDER.md).
   - Tela da Maria recebe o JSON do José: nada preenchido, aviso exato, JSON na fila.
   - Colagem com José e Maria, tela da Maria aberta: Maria preenchida (1,3 s); depois a tela do José, CARIMBAR: José preenchido pela fila.
   - Regressão do caminho da 1.2 (JSON sem paciente): cadastro 1,0 s (3,8 s com listas), antropometria por link 0,6 s, evolução 0,6 s, só consulta de reserva 2,7 s. Caminho do robô (`carimbar.responder` com `paciente`): preencheu e conferiu.
+- **Contra o site publicado (favorito tirado da página ao vivo, ponte e `enviar.html` ao vivo, celular emulado iPhone 13):**
+  - A: tela do José recebe o JSON do José: preencheu em 0,7 s, "Paciente conferido: José = José Carlos Pereira Fictício".
+  - B: tela da Maria recebe o JSON do José: nenhum campo preenchido; "Este JSON é do paciente José, mas a tela aberta é de Maria Souza Fictícia. Nada foi preenchido."; JSON na fila.
+  - C: uma colagem com José e Maria ("ENVIAR OS 2"): a tela da Maria preencheu os dados da Maria em 1,3 s; a tela do José, com "Fila: José, Maria", preencheu os do José.
+  - Regressão: cadastro 0,8 s (3,6 s com listas), antropometria por link 0,4 s, evolução 0,4 s, só consulta de reserva 2,6 s; favorito 1.2 congelado com a ponte nova 0,7 s; robô com `paciente` preencheu e conferiu.
+- Linhas de teste apagadas do banco depois dos testes.
 
 ## Testes 1.2 (09/11/2026)
 
