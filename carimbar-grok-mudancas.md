@@ -124,3 +124,27 @@ A versão anterior (código interno "Grok v2.1") passa a se chamar **Grok 1.0** 
 - jsdom: 75/75 (comparativo), 30/30 (v2) e 24/24 (novos da nuvem), no fonte e no minificado.
 - Chromium real ponta a ponta (cadastro, antropometria e evolução), com a ponte local e com a publicada, em tempo real e só com a consulta de reserva.
 - Os testes `unit-tests-comparativo.cjs` e `unit-tests-grok-v2.cjs` passaram a aceitar o rótulo "Grok 1.x" além de "Grok v2". O teste do rótulo e o teste da mensagem da aba Texto livre dependiam do texto da versão.
+
+# Versão Grok 1.2 (09/11/2026): chat comum do Grok + celular
+
+A 1.1 fica congelada em `versoes/1.1/` (tag `grok-1.1`).
+
+## O que mudou
+
+- **Favorito:** só o rótulo, agora "Grok 1.2". Preenchimento, extração e conversa com a ponte iguais à 1.1. O favorito da 1.1 continua funcionando com a ponte nova.
+- **Janela-ponte:**
+  - Registra a sessão na nuvem ao abrir (`carimbar_registrar`).
+  - Ganhou "📱 Parear celular / outro aparelho", com QR (qrcode-generator 1.4.4, servido pelo próprio site) e link `enviar.html#parear=<código>`.
+  - "Começar nova sessão" desfaz os pareamentos.
+- **Página do celular `enviar.html`:**
+  - Pareia uma vez: guarda o código no aparelho e o tira da barra de endereço na hora. Tem a opção Desparear.
+  - Aceita o JSON colado (botão Colar ou colar manual), inclusive dentro de bloco ``` ou com texto em volta, e também os links `#j=` (base64url) e `#t=` (encodeURIComponent).
+  - Mostra a prévia por tela, avisa sobre chaves desconhecidas e JSON inválido, envia, e mostra a hora do envio ou o erro.
+- **Supabase:** a função `carimbar_responder_app(codigo, conteudo)` grava o "carimbo" só para sessão existente, só objeto JSON, até 50 KB e até 60 por hora. Ela dispara o mesmo aviso em tempo real e a mesma consulta da 1.1. A tabela `carimbar.sessoes_pareadas` fica sem acesso direto e é limpa após 30 dias sem uso.
+- **Instruções para o Grok:** `GROK-INSTRUCOES.md` e a seção "Usar com o chat do Grok" na página de instalação.
+
+## Testes 1.2
+
+- Favorito (fonte e minificado): jsdom 75/75, 30/30 e 24/24. O teste da nuvem passou a ler o rótulo esperado do próprio arquivo.
+- Página do celular: jsdom 23/23.
+- Ponta a ponta em Chromium real (contexto hospital + contexto celular emulado): pareamento por QR, colar com texto em volta, link #j= e só consulta de reserva.

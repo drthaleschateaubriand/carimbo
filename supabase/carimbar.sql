@@ -1,4 +1,4 @@
--- CARIMBAR Grok 1.1 - backend Supabase (projeto carimbar, sa-east-1)
+-- CARIMBAR Grok 1.2 - backend Supabase (projeto carimbar, sa-east-1)
 -- Gerado a partir das migracoes aplicadas.
 
 -- migracao 20261109105238 carimbar_1_1_mensagens
@@ -126,4 +126,55 @@ select cron.schedule('carimbar-limpeza-24h', '7 * * * *', $$delete from carimbar
 
 -- migracao 20261109105251 carimbar_politica_sem_acesso_direto
 create policy "sem acesso direto (somente funcoes)" on carimbar.mensagens as restrictive for all to anon, authenticated using (false) with check (false);
+
+-- migracao 20261109112351 carimbar_1_2_envio_celular
+-- sessoes registradas pela janela-ponte (permite parear o celular antes de qualquer envio da pagina)
+create table carimbar.sessoes_pareadas (
+  codigo text primary key check (codigo ~ '^[A-Za-z0-9_-]{32,128}$'),
+  criado_em timestamptz not null default now(),
+  visto_em timestamptz not null default now()
+);
+alter table carimbar.sessoes_pareadas enable row level security;
+revoke all on carimbar.sessoes_pareadas from public, anon, authenticated;
+create policy "sem acesso direto (somente funcoes)" on carimbar.sessoes_pareadas as restrictive for all to anon, authenticated using (false) with check (false);
+
+-- a ponte registra/renova a sessao ao abrir; limite global simples contra abuso
+create or replace function public.carimbar_registrar(p_codigo text)
+returns boolean language plpgsql security definer set search_path = '' as $$
+declare v_n int;
+begin
+  if p_codigo is null or p_codigo !~ '^[A-Za-z0-9_-]{32,128}$' then raise exception 'codigo invalido'; end if;
+  update carimbar.sessoes_pareadas set visto_em = now() where codigo = p_codigo;
+  if found then return true; end if;
+  select count(*) into v_n from carimbar.sessoes_pareadas where criado_em > now() - interval '1 hour';
+  if v_n >= 500 then raise exception 'limite de novas sessoes atingido, tente mais tarde'; end if;
+  insert into carimbar.sessoes_pareadas (codigo) values (p_codigo) on conflict (codigo) do update set visto_em = now();
+  return true;
+end $$;
+
+-- envio pelo celular/outro aparelho: so para sessao existente (registrada pela ponte ou com envio da pagina nas ultimas 24 h)
+create or replace function public.carimbar_responder_app(p_codigo text, p_conteudo jsonb)
+returns bigint language plpgsql security definer set search_path = '' as $$
+declare v_id bigint; v_n int;
+begin
+  if p_codigo is null or p_codigo !~ '^[A-Za-z0-9_-]{32,128}$' then raise exception 'codigo invalido'; end if;
+  if p_conteudo is null or jsonb_typeof(p_conteudo) <> 'object' then raise exception 'o conteudo deve ser um objeto JSON'; end if;
+  if octet_length(p_conteudo::text) > 51200 then raise exception 'conteudo grande demais (limite 50 KB)'; end if;
+  if not exists (select 1 from carimbar.sessoes_pareadas s where s.codigo = p_codigo and s.visto_em > now() - interval '30 days')
+     and not exists (select 1 from carimbar.mensagens m where m.codigo = p_codigo and m.criado_em > now() - interval '24 hours') then
+    raise exception 'sessao nao encontrada: pareie de novo pela janela-ponte';
+  end if;
+  select count(*) into v_n from carimbar.mensagens m where m.codigo = p_codigo and m.tipo = 'carimbo' and m.criado_em > now() - interval '1 hour';
+  if v_n >= 60 then raise exception 'limite de 60 envios por hora atingido'; end if;
+  insert into carimbar.mensagens (codigo, tipo, conteudo) values (p_codigo, 'carimbo', p_conteudo) returning id into v_id;
+  return v_id;
+end $$;
+
+revoke all on function public.carimbar_registrar(text) from public, authenticated;
+revoke all on function public.carimbar_responder_app(text, jsonb) from public, authenticated;
+grant execute on function public.carimbar_registrar(text) to anon;
+grant execute on function public.carimbar_responder_app(text, jsonb) to anon;
+
+-- limpeza: sessoes pareadas sem uso ha 30 dias
+select cron.schedule('carimbar-limpeza-sessoes-30d', '17 3 * * *', $$delete from carimbar.sessoes_pareadas where visto_em < now() - interval '30 days'$$);
 

@@ -1,4 +1,4 @@
-# Como a IA responde ao CARIMBAR Grok 1.1
+# Como a IA responde ao CARIMBAR (Grok 1.1 e 1.2)
 
 Projeto Supabase `carimbar` (ref `ybcoiphfbkmnzfppkryq`, São Paulo). Use SQL como dono do banco: conector Supabase `execute_sql`, ou outra conexão de serviço. A chave pública não consegue rodar estas funções.
 
@@ -30,3 +30,7 @@ Sem código, vai para a sessão da extração mais recente. Para uma sessão esp
 - Prescrição usa `prescricao` e `especial` (true/false). Exames usa `exames`. Evolução usa `evolucao`. Cadastro usa `nome`, `cpf`, `cns`, `nasc`, `mae`, `pai`, `email`, `cel`, `tel`, `sexo`, `sangue`, `etnia`, `identidadeGenero`, `menorDeIdade` e `anotacoes`. Antropometria usa `data`, `altura`, `peso`, `gordura`, as dobras e as circunferências `c…`.
 
 Um único JSON com chaves de várias telas pode ser enviado de novo a cada tela: o CARIMBAR usa só as chaves da tela aberta.
+
+## IA sem acesso ao banco (chat comum do Grok, 1.2)
+
+Responda só com o JSON num bloco de código. O médico cola no celular pareado (`enviar.html`), que grava pela função pública `carimbar_responder_app(codigo, conteudo)`. Veja [GROK-INSTRUCOES.md](GROK-INSTRUCOES.md).

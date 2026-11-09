@@ -2,6 +2,7 @@
    jsdom, sem rede: window.open devolve uma janela falsa (outro jsdom) que registra o que recebe. */
 const fs=require('fs'); const path=require('path'); const {JSDOM,VirtualConsole}=require('jsdom'); const assert=require('node:assert/strict');
 const SRC_FILE=process.env.CARIMBAR_FILE||'carimbar-grok-1.1.js'; const LABEL=process.env.LABEL||'grok-1.1'; const src=fs.readFileSync(SRC_FILE,'utf8');
+const VER=(src.match(/['"](Grok 1\.\d+)['"]/)||[])[1]; if(!VER) throw new Error('rotulo de versao nao encontrado'); /* rotulo esperado vem do proprio arquivo (1.1, 1.2...) */
 const PAGINAS=process.env.PAGINAS_DIR||'/workspace/carimbar-e2e';
 const PONTE='https://drthaleschateaubriand.github.io/carimbo/ponte.html', ORIG='https://drthaleschateaubriand.github.io';
 const results=[]; const wait=ms=>new Promise(r=>setTimeout(r,ms));
@@ -28,10 +29,10 @@ const CAD='<form><mat-form-field><label for="n1">Nome Completo</label><input id=
  '<input name="bornDate" type="date" aria-label="Data de nascimento"><textarea name="obs" placeholder="Observações"></textarea>'+
  '<ckeditor name="annotations"><div class="ck-editor__editable" id="ed1">Texto antigo</div></ckeditor></form>';
 (async()=>{
-await test('11-01','Barra mostra Grok 1.1 e o botão ENVIAR P/ IA',async()=>{const f=fixture('<input name="fullName">');eq([!!f.btn('ENVIAR P/ IA'),f.d.getElementById('carimbarVersao').textContent],[true,'Grok 1.1'])});
+await test('11-01','Barra mostra o rótulo Grok 1.x e o botão ENVIAR P/ IA',async()=>{const f=fixture('<input name="fullName">');eq([!!f.btn('ENVIAR P/ IA'),f.d.getElementById('carimbarVersao').textContent],[true,VER])});
 await test('11-02','ENVIAR abre a ponte padrão com nome fixo, sem rede no favorito',async()=>{const f=fixture('<input name="fullName">');f.btn('ENVIAR P/ IA').onclick();eq([f.abertas.length,f.abertas[0].u,f.abertas[0].n],[1,PONTE,'carimbarPonte']);eq(/fetch\(|XMLHttpRequest|WebSocket|supabase\.co/.test(src),false)});
 await test('11-03','Antes do aperto de mão nada é enviado; "pronta" → "ola" só para a origem da ponte',async()=>{const f=fixture(CAD);f.btn('ENVIAR P/ IA').onclick();eq(f.recebidas.length,0);f.daPonte({carimbar:'pronta'});eq(f.recebidas.map(r=>[r.msg.carimbar,r.origin]),[['ola',ORIG]])});
-await test('11-04','Após "conectado" envia o resumo da página (extracao) para a origem da ponte',async()=>{const f=fixture(CAD);const r=await conectar(f);assert.ok(r);eq([r.origin,r.msg.pagina,r.msg.url,r.msg.conteudo.carimbar,r.msg.conteudo.tiposDetectados],[ORIG,'cadastro,exames','https://sistema.exemplo.test/form','Grok 1.1',['cadastro','exames']]);return {conteudo:r.msg.conteudo}});
+await test('11-04','Após "conectado" envia o resumo da página (extracao) para a origem da ponte',async()=>{const f=fixture(CAD);const r=await conectar(f);assert.ok(r);eq([r.origin,r.msg.pagina,r.msg.url,r.msg.conteudo.carimbar,r.msg.conteudo.tiposDetectados],[ORIG,'cadastro,exames','https://sistema.exemplo.test/form',VER,['cadastro','exames']]);return {conteudo:r.msg.conteudo}});
 await test('11-05','Resumo: rótulos, valores, opções, checkbox, mat-select, editor; sem hidden, sem senha, sem HTML',async()=>{const f=fixture(CAD);const c=(await conectar(f)).msg.conteudo;const by=n=>c.campos.find(x=>x.name===n);
  eq(by('fullName'),{name:'fullName',id:'n1',campo:'text',rotulo:'Nome Completo',valor:'Já digitado',obrigatorio:true});
  eq(by('segredo'),undefined); eq(by('senha').valor,undefined); eq(by('nationality').opcoes,['--','Brasileira','Estrangeira']); eq(by('nationality').valor,'Brasileira');

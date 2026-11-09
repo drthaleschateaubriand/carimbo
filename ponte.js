@@ -1,4 +1,4 @@
-/* CARIMBAR Grok 1.1 - janela-ponte entre a pagina (favorito) e a nuvem (Supabase).
+/* CARIMBAR Grok 1.2 - janela-ponte entre a pagina (favorito) e a nuvem (Supabase).
    - Conversa com a pagina que a abriu somente por postMessage, aceitando mensagens apenas de window.opener
      e respondendo apenas para a origem dessa pagina (recebida no aperto de mao).
    - Gera e guarda um codigo secreto de sessao (localStorage); a nuvem so entrega dados a quem tem o codigo.
@@ -37,6 +37,36 @@
   $('sessao').textContent = codigo.slice(0, 8);
 
   var sb = window.supabase.createClient(SB_URL, SB_KEY, {auth: {persistSession: false, autoRefreshToken: false, detectSessionInUrl: false}});
+
+  /* ---------- 1.2: registro da sessao e pareamento do celular ---------- */
+  async function registrar(){
+    try{
+      var r = await sb.rpc('carimbar_registrar', {p_codigo: codigo});
+      if(r.error) log('Aviso: não foi possível registrar a sessão (' + r.error.message + ').');
+    }catch(e){ log('Aviso: sem conexão para registrar a sessão.'); }
+  }
+  function linkParear(){ return new URL('enviar.html', location.href).href.split('#')[0] + '#parear=' + codigo; }
+  function desenharQR(){
+    var link = linkParear();
+    $('linkParear').value = link;
+    var box = $('qr'); box.textContent = '';
+    try{
+      var q = window.qrcode(0, 'M'); q.addData(link); q.make();
+      var img = document.createElement('img'); img.alt = 'QR de pareamento'; img.src = q.createDataURL(6, 2);
+      box.appendChild(img);
+    }catch(e){ box.textContent = 'QR indisponível; use o link abaixo.'; }
+  }
+  $('btnParear').addEventListener('click', function(){
+    var p = $('painelParear'); p.hidden = !p.hidden;
+    if(!p.hidden){ desenharQR(); registrar(); }
+  });
+  $('copiarParear').addEventListener('click', function(){
+    var inp = $('linkParear'), b = $('copiarParear');
+    var ok = function(){ b.textContent = 'Copiado!'; setTimeout(function(){ b.textContent = 'Copiar link'; }, 1500); };
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(inp.value).then(ok, function(){ inp.select(); });
+    else { inp.select(); try{ if(document.execCommand('copy')) ok(); }catch(e){} }
+  });
+  registrar();
 
   /* ---------- pagina (favorito) ---------- */
   var origemPagina = null, pendentes = [], conectado = false;
@@ -156,6 +186,8 @@
     codigo = novoCodigo(); localStorage.setItem(K_CODIGO, codigo);
     ultimoId = 0; primeiraConsulta = true; pendentes = [];
     $('sessao').textContent = codigo.slice(0, 8);
+    registrar();
+    if(!$('painelParear').hidden) desenharQR();
     if(canal){ sb.removeChannel(canal); canal = null; }
     ligarRealtime();
     log('Nova sessão ' + codigo.slice(0, 8) + '. Clique ENVIAR P/ IA na página.');
