@@ -6,6 +6,16 @@ Favorito (bookmarklet) que **preenche formulários de qualquer sistema web** e *
 - Enviar do celular (chat do Grok): https://drthaleschateaubriand.github.io/carimbo/enviar.html
 - Versões anteriores: [Grok 1.3](https://drthaleschateaubriand.github.io/carimbo/versoes/1.3/) (sem leitura de quadros), [Grok 1.2](https://drthaleschateaubriand.github.io/carimbo/versoes/1.2/) (sem conferência do paciente), [Grok 1.1](https://drthaleschateaubriand.github.io/carimbo/versoes/1.1/) (nuvem, sem celular) e [Grok 1.0](https://drthaleschateaubriand.github.io/carimbo/versoes/1.0/) (sem nuvem)
 
+## Programas para o computador (Windows e Mac)
+
+Além do favorito do navegador, há o programa do computador (fotos da janela da frente + nuvem + colagem campo a campo), na versão 1.0:
+
+- [CARIMBAR para Windows](https://drthaleschateaubriand.github.io/carimbo/downloads/CARIMBAR-para-Windows-1.0.zip) (AutoHotkey v2)
+- [CARIMBAR para Mac, Apple Silicon](https://drthaleschateaubriand.github.io/carimbo/downloads/CARIMBAR-para-Mac-1.0.0-arm64.zip)
+- [CARIMBAR para Mac, Intel](https://drthaleschateaubriand.github.io/carimbo/downloads/CARIMBAR-para-Mac-1.0.0-x64.zip)
+
+Código e instruções do Mac: [carimbar-mac/LEIAME.md](carimbar-mac/LEIAME.md). Código do Windows: [carimbar-mv/](carimbar-mv/).
+
 ## Novo na 1.4: quadros (MV PEP), modo genérico e navegador do SoulMV
 
 - **Quadros:** procura campos, editores e o paciente em todos os `iframe`/`frame` da mesma origem, inclusive `frameset`, quadros aninhados e shadow DOM aberto. Quadros de outro site não podem ser lidos pelo navegador: a barra mostra "Quadros lidos: N | de outro site, ignorados: M".

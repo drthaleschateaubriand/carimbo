@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>CARIMBAR</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<div class="wrap" id="app">Carregando…</div>
+<script>
+const app=document.getElementById('app');
+const api=window.carimbar;
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function telaEscolha(s){
+  const opts=(s.telas||[]).map(t=>'<option value="'+esc(t.nome)+'"'+(t.nome===(s.tela||'evolucao')?' selected':'')+'>'+esc(t.rotulo)+'</option>').join('');
+  const atual=(s.telas||[]).find(t=>t.nome===(s.tela||'evolucao'))||(s.telas||[])[0];
+  app.innerHTML='<h1>CARIMBAR: qual tela?</h1>'+
+    '<p>Qual tela do sistema está aberta agora?</p>'+
+    '<div class="linha"><select id="tela">'+opts+'</select></div>'+
+    '<div class="info" id="info">'+esc(atual?atual.descricao:'')+'</div>'+
+    '<div class="btns"><button class="acao" id="ok">Continuar</button><button class="acao sec" id="no">Cancelar</button></div>';
+  const sel=document.getElementById('tela');
+  sel.onchange=function(){
+    const t=(s.telas||[]).find(x=>x.nome===sel.value);
+    document.getElementById('info').textContent=t?t.descricao:'';
+  };
+  document.getElementById('ok').onclick=function(){ api.noBotao('escolher-tela',{tela:sel.value}); };
+  document.getElementById('no').onclick=function(){ api.noBotao('cancelar'); };
+}
+function telaFotos(s){
+  const n=s.nFotos||0, max=s.maxFotos||4;
+  app.innerHTML='<h1>CARIMBAR: fotos</h1>'+
+    '<p>Tela: <b>'+esc(s.telaTitulo||s.tela)+'</b></p>'+
+    '<p>Fotos tiradas: '+n+' de '+max+'.</p>'+
+    '<p>Se a tela é longa: role o sistema até a parte que falta e clique em “Mais uma foto”. Quando estiver tudo, clique em “Enviar para a IA”.</p>'+
+    '<div class="btns">'+
+    '<button class="acao" id="mais"'+(n>=max?' disabled':'')+'>Mais uma foto</button>'+
+    '<button class="acao" id="env"'+(n<1?' disabled':'')+'>Enviar para a IA</button>'+
+    '<button class="acao sec" id="no">Cancelar</button></div>';
+  document.getElementById('mais').onclick=function(){ api.noBotao('mais-foto'); };
+  document.getElementById('env').onclick=function(){ api.noBotao('enviar'); };
+  document.getElementById('no').onclick=function(){ api.noBotao('cancelar'); };
+}
+function telaEspera(s){
+  const seg=Math.max(0, Math.floor(((Date.now())-(s.tickEnvio||Date.now()))/1000));
+  const mm=Math.floor(seg/60), ss=String(seg%60).padStart(2,'0');
+  let txt='Tela: '+(s.telaTitulo||'')+' ('+(s.tela||'')+')  |  fotos: '+(s.nFotos||0)+
+    '\nExtração nº '+(s.extId||'…')+'  |  sessão '+(s.sessao||'')+
+    '\nEnviado às '+(s.horaEnvio||'')+'  (esperando há '+mm+':'+ss+'; desiste em 15 min)'+
+    '\nDiga à IA no chat o que preencher. Quando ela responder, esta janela muda sozinha.';
+  if(s.ignoradas>0) txt+='\nIgnoradas '+s.ignoradas+' resposta(s) que não são desta extração.';
+  if(s.erroRede) txt+='\nSem rede agora ('+s.erroRede+'); tentando de novo.';
+  app.innerHTML='<h1>Enviado. Aguardando a IA...</h1>'+
+    '<div class="info" id="info">'+esc(txt)+'</div>'+
+    '<div class="btns"><button class="acao sec" id="no">Cancelar</button></div>';
+  document.getElementById('no').onclick=function(){ api.noBotao('cancelar'); };
+}
+function telaConfirma(s){
+  const r=s.resumo||{linhas:[],paciente:'',prontuario:'',podeColar:false};
+  const nome=r.paciente?esc(r.paciente):'NÃO INFORMADO';
+  const cls=r.paciente?'oknome':'oknome erro';
+  let extra='';
+  if(r.prontuario) extra+='<p>Prontuário: '+esc(r.prontuario)+'</p>';
+  const seg=Math.max(0, Math.floor((Date.now()-(s.tickEnvio||Date.now()))/1000));
+  extra+='<p>Tela: '+esc(s.telaTitulo||'')+' ('+esc(s.tela||'')+')  |  extração nº '+esc(s.extId)+'  |  enviada às '+esc(s.horaEnvio)+' (há '+Math.floor(seg/60)+' min '+ (seg%60)+' s)  |  sessão '+esc(s.sessao||'')+'</p>';
+  if(s.telaExemplo) extra+='<p class="erro">TELA DE EXEMPLO: a ordem do Tab ainda não foi conferida no hospital. Confira cada campo depois de colar. Não salve.</p>';
+  const rows=(r.linhas||[]).map(l=>'<tr><td>'+l.idx+'</td><td>'+esc(l.chave)+'</td><td>'+esc(l.previa)+'</td><td>'+esc(l.caracteres)+'</td></tr>').join('');
+  let motivo='';
+  if(!r.paciente) motivo='<p class="erro">A resposta veio sem o nome do paciente: peça à IA para incluir “paciente” e responder de novo.</p>';
+  else if(!r.nCola) motivo='<p class="erro">A resposta não tem nenhum valor para colar.</p>';
+  app.innerHTML='<h1>CARIMBAR: confirmar '+esc(s.tela||'')+'</h1>'+
+    '<p class="'+cls+'">Paciente no JSON: '+nome+'</p>'+extra+
+    '<table><thead><tr><th>#</th><th>Campo</th><th>Prévia do que será colado</th><th>Caracteres</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<p>1) Confira o paciente acima com o cabeçalho da tela.<br>2) No sistema, clique dentro do PRIMEIRO campo da tela.<br>3) Clique em um dos botões. Nada é salvo e Enter nunca é apertado.</p>'+
+    motivo+
+    '<div class="btns">'+
+    '<button class="acao" id="sub"'+(r.podeColar?'':' disabled')+'>Confirmar (substituir)</button>'+
+    '<button class="acao" id="ins"'+(r.podeColar?'':' disabled')+'>Inserir no cursor</button>'+
+    '<button class="acao sec" id="no">Cancelar</button></div>';
+  document.getElementById('sub').onclick=function(){ api.noBotao('confirmar-substituir'); };
+  document.getElementById('ins').onclick=function(){ api.noBotao('inserir-cursor'); };
+  document.getElementById('no').onclick=function(){ api.noBotao('cancelar'); };
+}
+function telaAjustes(s){
+  const c=s.cfg||{};
+  app.innerHTML='<h1>Configurações</h1>'+
+    '<p class="dica">Sessão neste computador: '+(s.codigoPrefixo||'')+'…  ·  versão '+(s.versao||'')+'</p>'+
+    '<label class="campo">Trecho que o título da janela do sistema precisa conter</label>'+
+    '<input type="text" id="janelaTitulo" value="'+esc(c.janelaTitulo||'')+'">'+
+    '<label class="campo">Atraso depois de cada Tab (ms)</label>'+
+    '<input type="number" id="atrasoTab" value="'+esc(c.atrasoTab||250)+'">'+
+    '<label class="campo">Atraso depois de cada colar (ms)</label>'+
+    '<input type="number" id="atrasoColar" value="'+esc(c.atrasoColar||400)+'">'+
+    '<label class="campo">Quebras de linha</label>'+
+    '<select id="usarCrlf"><option value="1"'+(c.usarCrlf!==false?' selected':'')+'>CRLF (Windows)</option><option value="0"'+(c.usarCrlf===false?' selected':'')+'>só LF</option></select>'+
+    '<label class="campo">Atalho de colar e selecionar</label>'+
+    '<select id="atalhoColar"><option value="cmd"'+(c.atalhoColar!=='ctrl'?' selected':'')+'>Cmd+V / Cmd+A (Mac nativo)</option><option value="ctrl"'+(c.atalhoColar==='ctrl'?' selected':'')+'>Ctrl+V / Ctrl+A (área remota Windows)</option></select>'+
+    '<p class="dica">O atalho global para começar é Control+Option+M (o mesmo Control+Alt+M do programa para Windows). Clique com o botão direito no botão CARIMBAR para abrir estas configurações.</p>'+
+    '<p class="dica">Este programa não é assinado pela Apple. Na primeira abertura use botão direito &gt; Abrir. Autorize Gravação de Tela e Acessibilidade em Ajustes do Sistema &gt; Privacidade e Segurança.</p>'+
+    '<div class="btns"><button class="acao" id="ok">Salvar</button><button class="acao sec" id="no">Fechar</button></div>';
+  document.getElementById('ok').onclick=function(){
+    api.noBotao('salvar-ajustes',{
+      janelaTitulo:document.getElementById('janelaTitulo').value,
+      atrasoTab:Number(document.getElementById('atrasoTab').value),
+      atrasoColar:Number(document.getElementById('atrasoColar').value),
+      usarCrlf:document.getElementById('usarCrlf').value==='1',
+      atalhoColar:document.getElementById('atalhoColar').value
+    }).then(function(){ api.noBotao('cancelar'); });
+  };
+  document.getElementById('no').onclick=function(){ api.noBotao('cancelar'); };
+}
+function render(s){
+  s=s||{};
+  if(s.vista==='escolha') telaEscolha(s);
+  else if(s.vista==='fotos') telaFotos(s);
+  else if(s.vista==='espera') telaEspera(s);
+  else if(s.vista==='confirma') telaConfirma(s);
+  else if(s.vista==='ajustes') telaAjustes(s);
+  else app.innerHTML='<p>Aguardando…</p>';
+}
+api.onEstado(render);
+api.noBotao('estado').then(render);
+setInterval(function(){
+  api.noBotao('estado').then(function(s){ if(s && s.vista==='espera') render(s); });
+},1000);
+</script>
+</body>
+</html>

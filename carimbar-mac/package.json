@@ -1,0 +1,23 @@
+{
+  "name": "carimbar-mac",
+  "productName": "CARIMBAR",
+  "version": "1.0.0",
+  "description": "CARIMBAR para Mac: fotos da janela da frente, nuvem e colagem campo a campo, com as mesmas travas do programa para Windows 1.0.",
+  "main": "src/main.js",
+  "author": "CARIMBAR",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "test": "node testes/fluxo.test.cjs && node testes/nuvem.test.cjs",
+    "test:fluxo": "node testes/fluxo.test.cjs",
+    "test:nuvem": "node testes/nuvem.test.cjs",
+    "dist:mac": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac zip --arm64 --x64",
+    "dist:mac:ci": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac dmg zip --arm64 --x64",
+    "pack:dir": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac dir --arm64"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  }
+}

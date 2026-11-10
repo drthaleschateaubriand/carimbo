@@ -1,0 +1,43 @@
+name: CARIMBAR para Mac
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'carimbar-mac/**'
+      - '.github/workflows/carimbar-mac.yml'
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Testes de lógica e nuvem (dados fictícios)
+        working-directory: carimbar-mac
+        run: |
+          npm install
+          npm test
+  pacote:
+    needs: testes
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Gerar DMG e zip (sem assinatura Apple)
+        working-directory: carimbar-mac
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: |
+          npm install
+          npm run dist:mac:ci
+      - name: Publicar artefatos da ação
+        uses: actions/upload-artifact@v4
+        with:
+          name: CARIMBAR-para-Mac-1.0
+          path: |
+            carimbar-mac/dist/*.zip
+            carimbar-mac/dist/*.dmg
+          if-no-files-found: error

@@ -1,0 +1,31 @@
+appId: br.carimbar.mac
+productName: CARIMBAR
+copyright: CARIMBAR
+directories:
+  output: dist
+  buildResources: build
+files:
+  - src/**/*
+  - ui/**/*
+  - assets/**/*
+  - package.json
+  - LEIAME.md
+asar: true
+extraMetadata:
+  name: carimbar-mac
+mac:
+  category: public.app-category.medical
+  icon: assets/icon.png
+  identity: null
+  hardenedRuntime: false
+  gatekeeperAssess: false
+  target:
+    - target: zip
+      arch:
+        - arm64
+        - x64
+  artifactName: CARIMBAR-para-Mac-${version}-${arch}.${ext}
+dmg:
+  artifactName: CARIMBAR-para-Mac-${version}-${arch}.${ext}
+  title: CARIMBAR para Mac
+  writeUpdateInfo: false

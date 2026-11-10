@@ -1,2 +1,6 @@
 node_modules
 resultados-*.json
+
+# CARIMBAR para Mac (build)
+carimbar-mac/node_modules/
+carimbar-mac/dist/
