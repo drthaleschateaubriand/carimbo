@@ -1,0 +1,25 @@
+EXT evolucao 163
+FIM_CENARIO evolucao
+EXT prescricao 165
+FIM_CENARIO prescricao
+EXT exames 167
+FIM_CENARIO exames
+EXT admissao 169
+FIM_CENARIO admissao
+EXT alta 171
+FIM_CENARIO alta
+EXT antropometria 173
+FIM_CENARIO antropometria
+EXT cancela_conf 175
+FIM_CENARIO cancela_conf
+EXT ignora_outras 177
+FIM_CENARIO ignora_outras
+EXT janela_errada 182
+FIM_CENARIO janela_errada
+EXT sem_paciente 184
+FIM_CENARIO sem_paciente
+EXT cancela_espera 186
+FIM_CENARIO cancela_espera
+EXT limite_fotos 187
+FIM_CENARIO limite_fotos
+FIM

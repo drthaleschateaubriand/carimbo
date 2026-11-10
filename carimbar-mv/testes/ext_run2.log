@@ -1,0 +1,9 @@
+EXT evolucao 198
+FIM_CENARIO evolucao
+EXT alta 200
+FIM_CENARIO alta
+EXT ignora_outras 202
+FIM_CENARIO ignora_outras
+EXT janela_errada 207
+FIM_CENARIO janela_errada
+FIM
